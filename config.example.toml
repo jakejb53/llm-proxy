@@ -1,0 +1,53 @@
+# Local address the proxy listens on. HTTP only.
+listen = "http://127.0.0.1:10000"
+
+# Upstream LLM API base URL. HTTP or HTTPS. The incoming request's path and
+# query are appended to this.
+endpoint = "https://api.anthropic.com"
+
+# Rewrite rules, applied in order to every JSON string value in every body,
+# both requests and responses (object keys are never touched), before it is
+# logged and forwarded. A streamed response is reconstructed into one
+# message first, then rewritten, then re-sent as a stream.
+#
+# Rule syntax:  s<d>PATTERN<d>REPLACEMENT<d>FLAGS
+#   <d>          Any single delimiter character except letters, digits,
+#                whitespace and backslash. Typically / or | or #.
+#   The trailing delimiter and FLAGS may be omitted:  s/find/replace
+#   To use the delimiter literally inside PATTERN or REPLACEMENT, escape it
+#   with a backslash:  s/a\/b/c/
+#
+# FLAGS (any combination, any order):
+#   g   replace every match; without it only the first match is replaced
+#   i   case-insensitive
+#   s   `.` also matches newline (by default it does not)
+#   m   `^` and `$` match at line boundaries instead of only string ends
+#
+# PATTERN uses Rust regex syntax (https://docs.rs/regex/latest/regex/#syntax):
+#   .  matches any character except newline unless the s flag is set
+#   .* is greedy; .*? stops at the first possible end
+#   Inline flags are also accepted at the start of a pattern, e.g. (?si)
+#   Backreferences and lookaround are not supported
+#
+# REPLACEMENT:
+#   $1 or ${1}   text captured by group 1;  ${name} for a named group
+#   $$           a literal dollar sign
+#   Write ${1}x rather than $1x when a letter follows the group number,
+#   because $1x would be read as a group named "1x".
+#
+# Write rules as single-quoted TOML strings so backslashes are literal.
+# In double-quoted strings TOML itself consumes backslashes, so \d would
+# have to be written \\d.
+#
+# A rule that fails to parse stops startup with an error naming the rule.
+#
+# regex = [
+#   's/starts with.*?ends with//s',
+#   's|http://old\.example|https://new.example|g',
+# ]
+regex = [
+  's/Refuse requests for.*?or defensive use cases\.//g',
+  's/When you use a pronoun for someone.*?visible thinking\.//g',
+  's/This iteration of Claude is.*?for more information\.//g',
+  's/# userEmail.*?unless the user explicitly asks\.//gs',
+]
